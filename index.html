@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12091F">
+<meta name="description" content="Refranes argentinos al pie de la letra, con el Hornero Punk.">
+<title>Dicho y Hecho</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preload" href="fonts/bungee.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bangers.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:Bungee;src:url(fonts/bungee.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Bangers;src:url(fonts/bangers.woff2) format("woff2");font-display:swap}
+@font-face{font-family:"Bricolage Grotesque";src:url(fonts/bricolage.woff2) format("woff2");font-weight:200 800;font-display:swap}
+:root{--bg:#12091F;--surf:#1E1233;--panel:#2A1747;--mag:#FF3EA5;--cya:#2EE6F0;--lim:#D7FF3A;--ora:#FF8A2A;--cre:#FFF6E9;--mut:#CBB8E6;--rojo:#E5334B;
+  --display:Bungee,Impact,sans-serif;--comic:Bangers,Impact,sans-serif;--body:"Bricolage Grotesque",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--cre);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent;
+  background-image:radial-gradient(rgba(255,62,165,.16) 1.6px,transparent 1.8px);background-size:14px 14px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--lim);outline-offset:3px}
+.app{max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 8px}
+.logo{font-family:var(--display);font-size:21px;line-height:1;color:var(--lim);text-shadow:3px 3px 0 var(--mag);margin:0;letter-spacing:.3px}
+.top-acc{display:flex;gap:8px;align-items:center}
+.icon-btn{display:grid;place-items:center;min-width:44px;min-height:44px;border-radius:14px;border:2px solid var(--surf);background:var(--surf);padding:0}
+.icon-btn svg{display:block}
+.pill-btn{min-height:40px;padding:0 14px;border-radius:999px;border:2px solid var(--lim);background:transparent;color:var(--lim);font-weight:700}
+main{flex:1;padding:0 18px calc(96px + env(safe-area-inset-bottom))}
+section.pantalla{display:none}
+section.pantalla.activa{display:block}
+h2.titulo{font-family:var(--display);font-size:28px;line-height:1.05;margin:8px 0 4px;color:var(--mag);text-shadow:3px 3px 0 var(--cya)}
+p.bajada{margin:0 0 14px;color:var(--mut)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:6px 2px 12px;margin:0 -18px;padding-inline:18px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:2px solid var(--cya);background:transparent;color:var(--cya);font-weight:600;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--cya);color:var(--bg)}
+/* tarjeta */
+.contador{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:14px;font-weight:600;margin-bottom:8px}
+.escena{perspective:1400px}
+.tarjeta{position:relative;display:grid;width:100%;padding:0;border:0;background:none;text-align:left;transition:transform .5s cubic-bezier(.3,1.4,.5,1);transform-style:preserve-3d;touch-action:pan-y}
+.tarjeta.volteada{transform:rotateY(180deg)}
+.cara{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--surf);border:3px solid var(--cre);border-radius:22px;box-shadow:8px 8px 0 var(--mag);padding:14px;display:flex;flex-direction:column;gap:12px}
+.cara.dorso{transform:rotateY(180deg);overflow:auto}
+.cara > svg{width:100%;height:auto;display:block;border-radius:12px;border:3px solid var(--bg)}
+.refran{font-family:var(--display);font-size:21px;line-height:1.22;margin:0;color:var(--cre)}
+.pista{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut)}
+.zas{font-family:var(--comic);font-size:52px;line-height:1;color:var(--lim);text-shadow:4px 4px 0 var(--mag);transform:rotate(-6deg);align-self:flex-start;margin:0}
+.bloque h3{margin:0 0 2px;font-size:13px;font-weight:800;color:var(--mag);letter-spacing:.3px}
+.bloque p{margin:0;font-size:16px}
+.etiquetas{display:flex;flex-wrap:wrap;gap:6px}
+.etiquetas span{font-size:12px;font-weight:700;color:var(--bg);background:var(--cya);border-radius:999px;padding:3px 10px}
+.hornero-dice{display:flex;gap:10px;align-items:center;margin:18px 0 4px}
+.hornero-dice svg{flex:none;width:58px;height:58px}
+.globo-h{flex:1;background:var(--cre);color:var(--bg);border:3px solid var(--bg);border-radius:16px 16px 16px 4px;padding:10px 14px;font-weight:650;font-size:15px;box-shadow:4px 4px 0 var(--cya)}
+.acciones{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{min-height:48px;padding:0 16px;border-radius:14px;border:2px solid var(--cre);background:transparent;color:var(--cre);font-weight:700;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.fuerte{background:var(--lim);color:var(--bg);border:3px solid var(--bg);box-shadow:4px 4px 0 var(--mag);font-weight:800}
+.btn.mag{background:var(--mag);color:var(--cre);border:3px solid var(--bg);box-shadow:5px 5px 0 var(--cya)}
+.btn.grande{width:100%;min-height:62px;font-family:var(--display);font-size:20px;font-weight:400}
+.btn[aria-pressed="true"]{background:var(--cre);color:var(--bg)}
+.btn.crece{flex:1}
+.nav-flechas{display:flex;gap:10px;margin-top:10px}
+.nav-flechas .btn{flex:1}
+/* índice */
+.indice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.indice button{padding:6px;border-radius:14px;border:2px solid var(--surf);background:var(--surf);text-align:left;display:flex;flex-direction:column;gap:6px}
+.indice button > svg{width:100%;height:auto;border-radius:8px;display:block}
+.indice span{font-size:12.5px;font-weight:650;line-height:1.25}
+.vacio{border:2px dashed var(--mut);border-radius:18px;padding:22px;color:var(--mut);text-align:center}
+/* refranadora */
+.franken > svg{width:100%;height:auto;display:block;border-radius:16px;border:3px solid var(--cre);box-shadow:8px 8px 0 var(--cya)}
+.rodillos{display:grid;gap:10px;margin:18px 0}
+.rodillo{display:flex;gap:10px;align-items:center;border:3px solid var(--mag);border-radius:16px;padding:10px 10px 10px 14px;background:var(--surf)}
+.rodillo.b{border-color:var(--cya)}
+.rodillo .txt{flex:1;font-family:var(--display);font-size:17px;line-height:1.25;min-height:2.5em;display:flex;align-items:center}
+.rodillo .candado{min-width:44px;min-height:44px;border-radius:12px;border:2px solid var(--mut);background:transparent;display:grid;place-items:center;color:var(--mut)}
+.rodillo .candado[aria-pressed="true"]{background:var(--lim);border-color:var(--lim);color:var(--bg)}
+.resultado{position:relative;background:var(--lim);color:var(--bg);border:3px solid var(--bg);border-radius:18px;box-shadow:8px 8px 0 var(--mag);padding:14px 16px 16px;margin-bottom:18px}
+.resultado p{margin:0;font-family:var(--display);font-size:20px;line-height:1.25}
+.kachunk{position:absolute;right:10px;top:-26px;font-family:var(--comic);font-size:34px;color:var(--cya);text-shadow:3px 3px 0 var(--bg);transform:rotate(8deg);pointer-events:none;opacity:0}
+.kachunk.ya{animation:estampa .5s ease-out forwards}
+@keyframes estampa{0%{opacity:0;transform:rotate(8deg) scale(.3)}60%{opacity:1;transform:rotate(8deg) scale(1.2)}100%{opacity:1;transform:rotate(8deg) scale(1)}}
+.lista{display:grid;gap:10px;margin-top:10px}
+.item{display:flex;gap:10px;align-items:center;background:var(--surf);border-radius:14px;padding:8px}
+.item > svg{width:96px;height:auto;border-radius:8px;flex:none}
+.item p{flex:1;margin:0;font-size:14px;font-weight:650}
+.item .mini{min-width:44px;min-height:44px;border-radius:12px;border:2px solid var(--mut);background:transparent;display:grid;place-items:center}
+h3.sub{font-family:var(--display);font-size:17px;color:var(--cya);margin:26px 0 6px;font-weight:400}
+/* juego */
+.marcador{display:flex;gap:10px;margin-bottom:12px}
+.marcador div{flex:1;background:var(--surf);border-radius:14px;padding:8px 12px}
+.marcador b{display:block;font-family:var(--display);font-size:22px;font-weight:400;color:var(--lim)}
+.marcador span{font-size:12.5px;color:var(--mut)}
+.pregunta{font-family:var(--display);font-size:20px;line-height:1.25;margin:14px 0 12px}
+.opciones{display:grid;gap:10px}
+.opcion{min-height:54px;text-align:left;padding:10px 14px;border-radius:14px;border:3px solid var(--cre);background:var(--surf);font-weight:700;font-size:16px}
+.opcion.bien{background:var(--lim);color:var(--bg);border-color:var(--bg)}
+.opcion.mal{background:var(--rojo);border-color:var(--bg)}
+.opcion:disabled{cursor:default}
+.opcion:disabled:not(.bien):not(.mal){opacity:.5}
+.mazos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 18px}
+.mazo{min-height:64px;border-radius:14px;border:3px solid var(--surf);background:var(--surf);font-weight:700;text-align:left;padding:10px 12px;line-height:1.2}
+.mazo[aria-pressed="true"]{border-color:var(--lim);box-shadow:4px 4px 0 var(--lim)}
+.final{text-align:center;padding:10px 0}
+.final .nota{font-family:var(--comic);font-size:72px;line-height:1;color:var(--lim);text-shadow:5px 5px 0 var(--mag)}
+/* del dicho al hecho */
+label.lbl{display:block;font-weight:700;margin:6px 0 8px}
+textarea{width:100%;min-height:96px;border-radius:16px;border:3px solid var(--cre);background:var(--surf);padding:12px 14px;font-size:16px;resize:vertical}
+textarea::placeholder{color:var(--mut)}
+.sugerencias{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}
+.sugerencias button{min-height:38px;padding:0 12px;border-radius:999px;border:2px dashed var(--mut);background:transparent;color:var(--mut);font-size:14px;font-weight:600}
+.match{background:var(--surf);border:3px solid var(--cre);border-radius:20px;box-shadow:8px 8px 0 var(--ora);padding:14px;display:grid;gap:10px;margin-top:18px}
+.match > svg{width:100%;height:auto;display:block;border-radius:12px;border:3px solid var(--bg)}
+.otros{display:grid;gap:10px;margin-top:14px}
+.otros button{display:flex;gap:10px;align-items:center;text-align:left;background:var(--surf);border:2px solid var(--surf);border-radius:14px;padding:8px}
+.otros button > svg{width:88px;height:auto;border-radius:8px;flex:none}
+.otros span{font-weight:650;font-size:14px}
+/* nav */
+nav.abajo{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:2px solid var(--surf);padding:8px 8px calc(10px + env(safe-area-inset-bottom));z-index:5}
+nav.abajo .fila{max-width:480px;margin:0 auto;display:flex;gap:4px}
+nav.abajo button{flex:1;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:transparent;border:0;color:var(--mut);font-size:11.5px;font-weight:700;line-height:1.1;border-radius:12px}
+nav.abajo button[aria-current="page"]{color:var(--lim)}
+/* modales */
+dialog{border:0;padding:0;background:transparent;color:var(--cre);max-width:min(440px,92vw);width:100%}
+dialog::backdrop{background:rgba(10,4,20,.82)}
+.caja{background:var(--surf);border:3px solid var(--cre);border-radius:22px;box-shadow:8px 8px 0 var(--mag);padding:18px;display:grid;gap:14px;max-height:88vh;overflow:auto}
+.caja img{width:100%;height:auto;border-radius:14px;display:block}
+.caja h2{margin:0;font-family:var(--display);font-weight:400;font-size:22px;color:var(--lim)}
+.caja p{margin:0}
+.fila-btn{display:flex;gap:10px;flex-wrap:wrap}
+.fila-btn .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--cre);color:var(--bg);font-weight:800;padding:10px 16px;border-radius:999px;border:3px solid var(--bg);box-shadow:4px 4px 0 var(--mag);z-index:20;opacity:0;transition:opacity .2s}
+.toast.ver{opacity:1}
+/* intro */
+.intro{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;text-align:center;padding:24px;border:0;width:100%;
+  background-image:radial-gradient(rgba(255,62,165,.2) 1.6px,transparent 1.8px);background-size:14px 14px}
+.intro .dicho{font-family:var(--display);font-size:clamp(22px,6.4vw,32px);line-height:1.2;color:var(--cre);max-width:12em;margin:0 auto}
+.intro .hecho{font-family:var(--comic);font-size:clamp(64px,22vw,110px);line-height:1;color:var(--lim);text-shadow:6px 6px 0 var(--mag);transform:rotate(-8deg);opacity:0;margin-top:10px}
+.intro svg{width:150px;height:150px;animation:salto 1s ease-out}
+.intro.sale{animation:fuera .35s ease-in forwards}
+.intro .hecho.ya{animation:estampa2 .45s ease-out forwards}
+@keyframes estampa2{0%{opacity:0;transform:rotate(-8deg) scale(2.4)}100%{opacity:1;transform:rotate(-8deg) scale(1)}}
+@keyframes salto{0%{transform:translateX(-120vw) rotate(-20deg)}70%{transform:translateX(10px) rotate(6deg)}100%{transform:none}}
+@keyframes fuera{to{opacity:0;visibility:hidden}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1 class="logo">DICHO Y HECHO</h1>
+    <div class="top-acc">
+      <button class="pill-btn" id="btnInstalar" hidden>Instalar</button>
+      <button class="icon-btn" id="btnHornero" aria-label="Conocé al Hornero"></button>
+    </div>
+  </header>
+  <main>
+    <section class="pantalla activa" id="p-refranes" aria-label="Refranes"></section>
+    <section class="pantalla" id="p-refranadora" aria-label="La Refranadora"></section>
+    <section class="pantalla" id="p-juego" aria-label="Juego"></section>
+    <section class="pantalla" id="p-dicho" aria-label="Del dicho al hecho"></section>
+  </main>
+</div>
+<nav class="abajo" aria-label="Secciones"><div class="fila" id="nav"></div></nav>
+<dialog id="dlgSticker"><div class="caja" id="cajaSticker"></div></dialog>
+<dialog id="dlgHornero"><div class="caja" id="cajaHornero"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="kit.js"></script>
+<script src="escenas.js"></script>
+<script src="datos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

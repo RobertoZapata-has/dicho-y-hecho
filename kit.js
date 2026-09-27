@@ -2,10 +2,10 @@
    Cada pieza es una función que devuelve SVG en coordenadas locales:
    el origen (0,0) está en los pies / la base del objeto. */
 const C = {
-  bg: '#12091F', surf: '#1E1233', panel: '#2A1747', suelo: '#2B1B4D',
-  mag: '#FF3EA5', cya: '#2EE6F0', lim: '#D7FF3A', ora: '#FF8A2A', cre: '#FFF6E9',
-  mut: '#CBB8E6', piel: '#F2B48A', cuero: '#5A3322', met: '#3A3350', acero: '#9C98B0',
-  madera: '#A0662F', barro: '#C4561A', verde: '#3DBA5A', rojo: '#E5334B', oro: '#FFD23F', rosa: '#FF9CC8'
+  bg: '#1B1712', surf: '#5A4A36', panel: '#F4DFA6', suelo: '#C98B4F',
+  mag: '#C8321F', cya: '#2F6FC0', lim: '#F2B72E', ora: '#E8742A', cre: '#FBF3DF',
+  mut: '#8A7A62', piel: '#F2B48A', cuero: '#5A3322', met: '#4A4640', acero: '#A8A39A',
+  madera: '#A0662F', barro: '#C4561A', verde: '#3DBA5A', rojo: '#D9482B', oro: '#F2C94C', rosa: '#EFA08A'
 };
 const O = `stroke="${C.bg}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"`;
 const O3 = `stroke="${C.bg}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"`;
@@ -106,7 +106,7 @@ P.piernas = () => `<rect x="-14" y="-40" width="12" height="40" rx="3" fill="${C
 P.mano = () => `<g transform="translate(-138,-200)"><g ${O}><path d="M40 260 L110 196 L150 232 L96 270 Z" fill="${C.piel}"/><ellipse cx="138" cy="200" rx="46" ry="30" fill="${C.piel}"/></g>` +
   ln('M112 206 Q138 214 170 204', C.bg, 4) + ln('M118 218 Q140 226 166 216', C.bg, 4) + `</g>`;
 
-/* ---------- el hornero punk ---------- */
+/* ---------- el hornero (versión dibujada para las viñetas) ---------- */
 P.hornero = () => {
   const J = C.cuero, F = '#B8612B', MET = C.met;
   return `<g transform="translate(-100,-194)">
@@ -119,7 +119,6 @@ P.hornero = () => {
 <g stroke="${C.bg}" stroke-width="5" stroke-linejoin="round"><ellipse cx="104" cy="118" rx="48" ry="40" fill="${J}"/><path d="M122 94 Q148 112 140 150 Q128 158 118 148 Q126 118 114 98 Z" fill="#FFD9A8"/></g>
 <path d="M114 98 Q126 118 118 148" fill="none" stroke="${C.cya}" stroke-width="3" stroke-linecap="round"/>
 <path d="M62 134 Q100 162 136 150" fill="none" stroke="${C.mag}" stroke-width="4" stroke-linecap="round"/>
-<g transform="translate(76,88) rotate(-8)"><rect x="0" y="0" width="32" height="16" rx="4" fill="${C.lim}" stroke="${C.bg}" stroke-width="3"/><text x="16" y="12.5" text-anchor="middle" font-family="${FONT}" font-size="12" fill="${C.bg}">PUNK</text></g>
 <g stroke="${C.bg}" stroke-width="4" stroke-linejoin="round"><path d="M70 110 Q100 102 122 126 Q100 142 66 130 Z" fill="#8A4A22"/><polygon points="80,142 94,142 87,152" fill="${C.ora}"/></g>
 <g stroke="${C.cya}" stroke-width="2.5" stroke-linecap="round" fill="none"><path d="M78 116 L110 126"/><path d="M74 124 L104 132"/></g>
 <g stroke="${C.bg}" stroke-width="5" stroke-linejoin="round"><polygon points="119,66 109,55 124,59 114,40 130,53 127,33 138,50 142,30 146,50 155,38 154,53 165,44 159,57" fill="#3A2A20"/>
@@ -160,7 +159,7 @@ P.perro = (o = {}) => [-14, -4, 8, 16].map(x => `<rect x="${x}" y="-16" width="7
   `<ellipse cx="0" cy="-22" rx="22" ry="13" fill="#C98B4F" ${O}/><circle cx="22" cy="-38" r="14" fill="#C98B4F" ${O}/><ellipse cx="15" cy="-44" rx="6" ry="11" fill="#7A4526" ${O3} transform="rotate(20 15 -44)"/><circle cx="25" cy="-42" r="2.6" fill="${C.bg}"/><circle cx="36" cy="-36" r="3.5" fill="${C.bg}"/>` +
   (o.ladra ? `<path d="M26 -30 L38 -28 L30 -22 Z" fill="${C.bg}"/>` : ln('M28 -30 Q32 -28 35 -31'));
 
-P.gato = () => ln('M-26 -20 Q-44 -30 -38 -50', '#6B4FA0', 6) + `<ellipse cx="0" cy="-20" rx="26" ry="16" fill="#6B4FA0" ${O}/><polygon points="14,-52 16,-68 26,-56" fill="#6B4FA0" ${O3}/><polygon points="32,-54 40,-68 42,-50" fill="#6B4FA0" ${O3}/><circle cx="28" cy="-40" r="15" fill="#6B4FA0" ${O}/><ellipse cx="23" cy="-42" rx="3.5" ry="2" fill="${C.lim}"/><ellipse cx="34" cy="-42" rx="3.5" ry="2" fill="${C.lim}"/>` + ln('M22 -46 L27 -44 M36 -46 L31 -44', C.bg, 2) + ln('M26 -33 Q29 -31 32 -33', C.bg, 2);
+P.gato = () => ln('M-26 -20 Q-44 -30 -38 -50', '#8A8078', 6) + `<ellipse cx="0" cy="-20" rx="26" ry="16" fill="#8A8078" ${O}/><polygon points="14,-52 16,-68 26,-56" fill="#8A8078" ${O3}/><polygon points="32,-54 40,-68 42,-50" fill="#8A8078" ${O3}/><circle cx="28" cy="-40" r="15" fill="#8A8078" ${O}/><ellipse cx="23" cy="-42" rx="3.5" ry="2" fill="${C.lim}"/><ellipse cx="34" cy="-42" rx="3.5" ry="2" fill="${C.lim}"/>` + ln('M22 -46 L27 -44 M36 -46 L31 -44', C.bg, 2) + ln('M26 -33 Q29 -31 32 -33', C.bg, 2);
 
 P.yaguarete = () => [-34, -18, 16, 32].map(x => `<rect x="${x}" y="-24" width="10" height="24" rx="4" fill="#F4B63A" ${O}/>`).join('') +
   ln('M-44 -36 Q-66 -40 -62 -64', '#F4B63A', 7) +
@@ -187,7 +186,7 @@ P.caballo = (o = {}) => {
   return s;
 };
 
-P.cuervo = () => ln('M-4 -12 L-6 0 M6 -12 L8 0', C.acero, 3) + `<polygon points="-20,-24 -40,-14 -18,-12" fill="#2B2140" ${O3}/><ellipse cx="0" cy="-24" rx="20" ry="16" fill="#2B2140" stroke="${C.mut}" stroke-width="2"/><circle cx="14" cy="-42" r="12" fill="#2B2140" stroke="${C.mut}" stroke-width="2"/><polygon points="24,-44 38,-40 24,-36" fill="${C.acero}" ${O3}/><circle cx="17" cy="-44" r="4" fill="${C.lim}"/>` + ln('M11 -48 L22 -45', C.mut, 2.5);
+P.cuervo = () => ln('M-4 -12 L-6 0 M6 -12 L8 0', C.acero, 3) + `<polygon points="-20,-24 -40,-14 -18,-12" fill="#2E2A26" ${O3}/><ellipse cx="0" cy="-24" rx="20" ry="16" fill="#2E2A26" stroke="${C.mut}" stroke-width="2"/><circle cx="14" cy="-42" r="12" fill="#2E2A26" stroke="${C.mut}" stroke-width="2"/><polygon points="24,-44 38,-40 24,-36" fill="${C.acero}" ${O3}/><circle cx="17" cy="-44" r="4" fill="${C.lim}"/>` + ln('M11 -48 L22 -45', C.mut, 2.5);
 
 P.pez = (o = {}) => `<polygon points="-30,-30 -54,-48 -54,-12" fill="${C.cya}" ${O}/><ellipse cx="0" cy="-30" rx="34" ry="22" fill="${C.cya}" ${O}/>` + ln('M-10 -48 Q-4 -30 -10 -12', C.bg, 2.5) +
   `<circle cx="14" cy="-38" r="6" fill="${C.cre}" ${O3}/><circle cx="16" cy="-38" r="2.4" fill="${C.bg}"/>` + (o.boca ? `<ellipse cx="32" cy="-24" rx="9" ry="8" fill="${C.bg}"/><ellipse cx="34" cy="-22" rx="4" ry="3" fill="${C.rojo}"/>` : '');
@@ -312,14 +311,14 @@ P.gotas = () => ln('M0 0 L-4 10', C.cya, 3);
 const FONDOS = {
   noche: u => `<rect width="342" height="254" fill="${C.panel}"/><rect width="342" height="254" fill="url(#d${u})"/>`,
   suelo: u => FONDOS.noche(u) + `<rect y="224" width="342" height="30" fill="${C.suelo}"/>` + ln('M0 224 L342 224', C.mag, 3),
-  campo: u => FONDOS.noche(u) + `<path d="M0 196 Q80 176 170 196 T342 190 L342 254 L0 254 Z" fill="#241A45"/>` + `<rect y="224" width="342" height="30" fill="${C.suelo}"/>` + ln('M0 224 L342 224', C.lim, 3),
-  interior: u => `<rect width="342" height="254" fill="#241440"/><rect width="342" height="254" fill="url(#d${u})"/><rect x="236" y="30" width="70" height="60" rx="4" fill="${C.panel}" ${O3}/>` + ln('M271 30 L271 90 M236 60 L306 60', C.bg, 3) + `<rect y="224" width="342" height="30" fill="#33204F"/>` + ln('M0 224 L342 224', C.cya, 3),
-  calle: u => FONDOS.noche(u) + `<rect x="20" y="70" width="60" height="154" fill="#231538"/><rect x="262" y="40" width="70" height="184" fill="#231538"/>` + [[34, 90], [56, 90], [34, 130], [56, 130], [276, 64], [304, 64], [276, 110], [304, 110]].map(([x, y]) => `<rect x="${x}" y="${y}" width="12" height="16" fill="${C.oro}" opacity="0.5"/>`).join('') +
+  campo: u => FONDOS.noche(u) + `<path d="M0 196 Q80 176 170 196 T342 190 L342 254 L0 254 Z" fill="#8BA35A"/>` + `<rect y="224" width="342" height="30" fill="${C.suelo}"/>` + ln('M0 224 L342 224', C.lim, 3),
+  interior: u => `<rect width="342" height="254" fill="#EBD3A0"/><rect width="342" height="254" fill="url(#d${u})"/><rect x="236" y="30" width="70" height="60" rx="4" fill="${C.panel}" ${O3}/>` + ln('M271 30 L271 90 M236 60 L306 60', C.bg, 3) + `<rect y="224" width="342" height="30" fill="#A0662F"/>` + ln('M0 224 L342 224', C.cya, 3),
+  calle: u => FONDOS.noche(u) + `<rect x="20" y="70" width="60" height="154" fill="#6B5A45"/><rect x="262" y="40" width="70" height="184" fill="#6B5A45"/>` + [[34, 90], [56, 90], [34, 130], [56, 130], [276, 64], [304, 64], [276, 110], [304, 110]].map(([x, y]) => `<rect x="${x}" y="${y}" width="12" height="16" fill="${C.oro}" opacity="0.5"/>`).join('') +
     `<rect y="224" width="342" height="30" fill="#2F2A3F"/>` + ln('M0 240 L342 240', C.lim, 3).replace('fill="none"', 'fill="none" stroke-dasharray="18 14"') + ln('M0 224 L342 224', C.mag, 3),
   rio: u => FONDOS.noche(u) + `<rect y="150" width="342" height="60" fill="${C.cya}" opacity="0.9"/>` + ln('M10 170 Q30 164 50 170 M120 186 Q140 180 160 186 M230 168 Q250 162 270 168 M60 196 Q80 190 100 196', C.bg, 2.5) + `<rect y="206" width="342" height="48" fill="${C.suelo}"/>` + ln('M0 206 L342 206', C.lim, 3),
   agua: u => `<rect width="342" height="254" fill="#16305C"/><rect width="342" height="254" fill="url(#d${u})"/>` + [[40, 60], [300, 90], [80, 200], [260, 210], [150, 40]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="none" stroke="${C.cya}" stroke-width="2"/>`).join('') + `<path d="M0 230 Q60 220 120 232 T240 228 T342 230 L342 254 L0 254 Z" fill="#C9B79C"/>`,
   mar: u => FONDOS.noche(u) + `<rect y="176" width="342" height="78" fill="#1D4E89"/>` + ln('M0 182 Q20 176 40 182 T80 182 T120 182 T160 182 T200 182 T240 182 T280 182 T320 182 T360 182', C.cya, 3) + `<rect y="224" width="342" height="30" fill="#7A4526"/>` + ln('M0 224 L342 224', C.bg, 4),
-  cordillera: u => FONDOS.noche(u) + `<polygon points="0,200 60,90 110,160 170,60 240,170 290,100 342,180 342,254 0,254" fill="#3A2A5E"/><polygon points="60,90 48,112 74,114" fill="${C.cre}"/><polygon points="170,60 154,90 190,92" fill="${C.cre}"/><polygon points="290,100 278,120 304,122" fill="${C.cre}"/>` + `<rect y="224" width="342" height="30" fill="${C.suelo}"/>` + ln('M0 224 L342 224', C.ora, 3),
+  cordillera: u => FONDOS.noche(u) + `<polygon points="0,200 60,90 110,160 170,60 240,170 290,100 342,180 342,254 0,254" fill="#7C93B0"/><polygon points="60,90 48,112 74,114" fill="${C.cre}"/><polygon points="170,60 154,90 190,92" fill="${C.cre}"/><polygon points="290,100 278,120 304,122" fill="${C.cre}"/>` + `<rect y="224" width="342" height="30" fill="${C.suelo}"/>` + ln('M0 224 L342 224', C.ora, 3),
   vinedo: u => FONDOS.noche(u) + [40, 110, 180, 250, 320].map(x => ln(`M${x} 224 L${x} 150`, C.madera, 4) + `<ellipse cx="${x}" cy="150" rx="28" ry="14" fill="${C.verde}" ${O3}/>` + [[-10, 162], [0, 166], [10, 162], [-5, 172], [5, 172]].map(([dx, y]) => `<circle cx="${x + dx}" cy="${y}" r="4" fill="${C.mag}"/>`).join('')).join('') + `<rect y="224" width="342" height="30" fill="${C.suelo}"/>` + ln('M0 224 L342 224', C.lim, 3),
   acequia: u => FONDOS.noche(u) + `<g transform="translate(40,206) scale(0.9)">${P.arbol()}</g><g transform="translate(300,206) scale(1)">${P.arbol()}</g><g transform="translate(250,206) scale(0.7)">${P.arbol()}</g>` +
     `<rect y="204" width="342" height="50" fill="${C.suelo}"/><rect y="226" width="342" height="14" fill="${C.cya}" ${O3}/>` + ln('M30 233 Q40 229 50 233 M150 233 Q160 229 170 233 M260 233 Q270 229 280 233', C.bg, 2),

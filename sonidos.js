@@ -85,6 +85,15 @@ const SND = (() => {
       });
     },
     flap: () => { for (let i = 0; i < 6; i++) soplido({ t: 0.9 + i * 0.12, dur: 0.05, vol: 0.2, f0: 700, f1: 1500, q: 0.8, ataque: 0.004 }); },
+    tic: () => tono({ tipo: 'square', f0: 1800, f1: 1400, dur: 0.035, vol: 0.1, filtro: { tipo: 'lowpass', f: 3000 } }),
+    error: () => tono({ tipo: 'sawtooth', f0: 170, f1: 110, dur: 0.22, vol: 0.2, filtro: { tipo: 'lowpass', f: 700 } }),
+    silbato: () => {
+      [[0, 0.22], [0.3, 0.55]].forEach(([t, d]) => {
+        const o = tono({ tipo: 'sine', f0: 2600, t, dur: d, vol: 0.16, ataque: 0.01 });
+        const l = ctx.createOscillator(), p = ctx.createGain(); l.frequency.value = 38; p.gain.value = 140;
+        l.connect(p); p.connect(o.frequency); const t0 = ctx.currentTime + t; l.start(t0); l.stop(t0 + d + 0.05);
+      });
+    },
     aterriza: () => { resorte(0.5, 900, 300, 0.35, 0.12); tono({ tipo: 'sine', f0: 220, f1: 110, t: 1.1, dur: 0.12, vol: 0.3 }); }
   };
 

@@ -1,6 +1,6 @@
 /* Dicho y Hecho — service worker: todo queda guardado en el celu para usarse sin internet. */
 importScripts('vinetas.js');
-const CACHE = 'dyh-v5';
+const CACHE = 'dyh-v8';
 const ARCHIVOS = [
   './', 'index.html', 'app.js', 'kit.js', 'escenas.js', 'datos.js', 'sonidos.js', 'vinetas.js', 'trampas.js', 'manifest.webmanifest',
   'fonts/bangers.woff2', 'fonts/archivo-400.woff2', 'fonts/archivo-600.woff2', 'fonts/archivo-800.woff2',

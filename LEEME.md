@@ -10,7 +10,7 @@ Refranes argentinos al pie de la letra, contados en historieta por el Hornero. P
 
 ## Archivos
 - `index.html` — estructura y estilos (cómic retro)
-- `app.js` — tarjetas, Refranadora, juego, Del dicho al hecho y stickers
+- `app.js` — tarjetas, refrán del día y racha, Refranadora, juegos (Completá, Adiviná, ¿Es de verdad?, Memotest; normal, contra reloj y de a dos), Del dicho al hecho y stickers
 - `vinetas.js` — qué refranes tienen viñeta en imagen
 - `trampas.js` — las opciones trampa del juego de completar
 - `sonidos.js` — los sonidos de historieta, generados en el momento (no hay archivos de audio)
@@ -27,7 +27,7 @@ Refranes argentinos al pie de la letra, contados en historieta por el Hornero. P
 - `img/v10-*.png/jpg` — las capas de la viñeta animada del refrán 10.
 - `img/hornero*.jpg` — el Hornero (mascota, pensando, festejando).
 
-Para cambiar una viñeta, reemplazá el archivo con el mismo nombre. Las 1, 7 y 10 y las del Hornero todavía están en baja resolución.
+Para cambiar una viñeta, reemplazá el archivo con el mismo nombre. Las poses del Hornero pensando y festejando todavía están en baja resolución.
 
 ## Cuando cambies algo
-Subí la versión nueva y cambiá `dyh-v5` por `dyh-v6` (y así) en `sw.js`, para que los celulares descarguen los archivos actualizados.
+Subí la versión nueva y cambiá `dyh-v8` por `dyh-v9` (y así) en `sw.js`, para que los celulares descarguen los archivos actualizados.

@@ -16,7 +16,19 @@ const mem = {
 };
 let favs = new Set(mem.get('favs', []));
 let frankens = mem.get('frankens', []);
-let record = mem.get('record', { puntos: 0, racha: 0 });
+
+/* ---------- racha diaria y refrán del día ---------- */
+const hoyStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const ayerStr = () => hoyStr(new Date(Date.now() - 864e5));
+let racha = mem.get('rachaDia', { ultimo: null, dias: 0, mejor: 0 });
+const rachaActual = () => (racha.ultimo === hoyStr() || racha.ultimo === ayerStr()) ? racha.dias : 0;
+function marcarDia() {
+  const hoy = hoyStr(); if (racha.ultimo === hoy) return;
+  racha.dias = racha.ultimo === ayerStr() ? racha.dias + 1 : 1;
+  racha.ultimo = hoy; racha.mejor = Math.max(racha.mejor || 0, racha.dias); mem.set('rachaDia', racha);
+  setTimeout(() => toast(racha.dias === 1 ? '¡Arrancaste tu racha! Volvé mañana' : `¡Racha de ${racha.dias} días seguidos!`), 900);
+}
+const idDelDia = () => { const d = new Date(); return R[Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5) % R.length].id; };
 
 /* ---------- íconos ---------- */
 const ico = {
@@ -29,6 +41,11 @@ const ico = {
   abierto: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
   basura: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>',
   sticker: '<path d="M4 4h16v10l-6 6H4z"/><path d="M14 20v-6h6"/>',
+  fuego: '<path d="M12 2c1 4 5 6 5 11a5 5 0 0 1-10 0c0-3 2-4 3-6 0 2 1 3 2 3 0-3-1-5 0-8z"/>',
+  reloj: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 2h6"/>',
+  duelo: '<circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5"/><path d="M15 15c3 0 7 2 7 5"/>',
+  atras: '<path d="M15 18l-6-6 6-6"/>',
+  flecha: '<path d="M9 18l6-6-6-6"/>',
   sonido: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/>',
   mudo: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6"/><path d="M22 9l-5 6"/>'
 };
@@ -112,7 +129,9 @@ function pintarRefranes() {
     </div>
     <div class="nav-flechas"><button class="btn" data-a="ant">Anterior</button><button class="btn" data-a="sig">Siguiente</button></div>`;
   }
-  el.innerHTML = `<nav class="chips" aria-label="Categorías">${chips}</nav>${cuerpo}`;
+  const n = rachaActual(), hecho = racha.ultimo === hoyStr(), dias = `${n} ${n === 1 ? 'día' : 'días'}`;
+  const tira = `<button class="deldia${hecho ? ' ok' : ''}" data-a="deldia">${svgIco('fuego', 24)}<span><b>Refrán del día</b><small>${hecho ? `Racha: ${dias} · hoy ya sumaste` : n ? `Racha: ${dias} · miralo para no cortarla` : 'Miralo y arrancá tu racha'}</small></span>${svgIco('flecha', 20)}</button>`;
+  el.innerHTML = `${tira}<nav class="chips" aria-label="Categorías">${chips}</nav>${cuerpo}`;
   const t = $('#tarjeta');
   if (t) armarSwipe(t);
   if (t && ref.lista[ref.i] === 10 && !quieto) { SND.play('aterriza'); SND.play('flap'); }
@@ -142,6 +161,7 @@ $('#p-refranes').addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b) return;
   const id = ref.lista[ref.i];
   switch (b.dataset.a) {
+    case 'deldia': SND.play('slide'); ref.filtro = 'todas'; ref.indice = false; ref.i = R.findIndex(r => r.id === idDelDia()); marcarDia(); pintarRefranes(); scrollTo({ top: 0 }); break;
     case 'sig': mover(1); break;
     case 'ant': mover(-1); break;
     case 'azar': SND.play('slide'); ref.i = azar(ref.lista.length); pintarRefranes(); break;
@@ -221,135 +241,298 @@ $('#p-refranadora').addEventListener('click', e => {
 });
 
 /* =========================================================
-   3. JUEGO: COMPLETÁ EL REFRÁN
+   3. JUEGOS
    ========================================================= */
 const BIEN = ['¡Eso, maestro!', 'Sabés más que mi abuela.', '¡Hecho! Seguí así.', 'Esa la sabía hasta el gato.', 'Canchero total.', 'Vos tenés calle, eh.'];
 const MAL = ['Uh, le erraste feo.', 'Nah, frío, frío.', 'Tranqui, a cualquiera le pasa. A vos un poco más.', 'Casi. Bueno, no tan casi.', 'Esa te la tengo que explicar yo.', 'Ni cerca, pero con estilo.'];
 const TRAMPA_MAL = ['Casi, pero el refrán no se dice así.', 'Te la creíste: quiere decir lo mismo, pero no es la letra.', 'Ojo, la idea es esa, pero con otras palabras no vale.', 'Esa es la trampita. El refrán va tal cual.'];
-const J = { modo: 'quiz', fase: 'inicio', mazo: 'todas', preg: [], i: 0, puntos: 0, racha: 0, mejorRacha: 0, resp: null, ops: [] };
+
+const JUEGOS = {
+  completar: { titulo: 'COMPLETÁ EL REFRÁN', corto: 'Completá el refrán', desc: 'Te doy la primera mitad y elegís cómo sigue. Ojo con la opción trampa.', img: 'img/v43.jpg' },
+  adivina: { titulo: 'ADIVINÁ EL REFRÁN', corto: 'Adiviná el refrán', desc: 'Mirá la viñeta y elegí qué refrán es.', img: 'img/v14.jpg' },
+  verdad: { titulo: '¿ES DE VERDAD?', corto: '¿Es de verdad?', desc: '¿Ese refrán existe o se lo inventó el Hornero?', img: 'img/hornero-pensando.jpg' },
+  memo: { titulo: 'MEMOTEST', corto: 'Memotest', desc: 'Encontrá las viñetas iguales. Solo o de a dos.', img: 'img/v3.jpg' }
+};
+const MODOS = { normal: ['Normal', '10 preguntas', 'juego'], reloj: ['Contra reloj', '60 segundos', 'reloj'], duelo: ['De a dos', 'pasándose el celu', 'duelo'] };
+
+let recs = mem.get('recs', {});
+{ const viejo = mem.get('record', null); if (viejo && viejo.puntos > (recs['completar-normal'] || 0)) { recs['completar-normal'] = viejo.puntos; mem.set('recs', recs); } }
+
 function armarOpciones(id) {
   const r = porId(id);
   const trampa = TRAMPAS[id];
   const pool = mezclar(R.filter(x => x.id !== id && x.mitadB !== r.mitadB)).slice(0, trampa ? 2 : 3).map(x => x.mitadB);
   return mezclar([r.mitadB, ...(trampa ? [trampa] : []), ...pool]);
 }
-const selectorModo = () => `<div class="modos" role="group" aria-label="Elegí el juego">
-  <button class="modo" data-modo="quiz" aria-pressed="${J.modo === 'quiz'}">Completá el refrán</button>
-  <button class="modo" data-modo="memo" aria-pressed="${J.modo === 'memo'}">Memotest</button></div>`;
-function pintarJuego() {
-  const el = $('#p-juego');
-  if (J.modo === 'memo') return pintarMemo();
-  if (J.fase === 'inicio') {
-    const mz = [['todas', 'Todos mezclados'], ...Object.entries(CAT)];
-    el.innerHTML = `${selectorModo()}<h2 class="titulo">COMPLETÁ EL REFRÁN</h2><p class="bajada">Te doy la primera mitad y la viñeta. Vos elegís cómo termina. Ojo: una de las opciones dice lo mismo con otras palabras, y esa no vale. Diez por ronda.</p>
-    <div class="marcador"><div><b>${record.puntos}/10</b><span>Tu mejor ronda</span></div><div><b>${record.racha}</b><span>Tu mejor racha</span></div></div>
-    <label class="lbl" id="lblMazo">Elegí el mazo</label>
-    <div class="mazos" role="group" aria-labelledby="lblMazo">${mz.map(([k, t]) => `<button class="mazo" data-mz="${k}" aria-pressed="${J.mazo === k}">${t}</button>`).join('')}</div>
-    <button class="btn fuerte grande" data-a="jugar">¡A JUGAR!</button>`;
-    return;
+const conTrampa = id => `${porId(id).mitadA} ${TRAMPAS[id]}`;
+
+/* cada juego arma sus preguntas con la misma forma */
+const PREG = {
+  completar(id) {
+    const r = porId(id), ops = armarOpciones(id);
+    return { id, vin: true, pregunta: r.mitadA + '…', ops, ok: ops.indexOf(r.mitadB), trampa: ops.indexOf(TRAMPAS[id]), correcto: r.texto };
+  },
+  adivina(id) {
+    const r = porId(id), real = frankTexto(id, id), tr = conTrampa(id);
+    const otros = mezclar(R.filter(x => x.id !== id)).slice(0, 2).map(x => frankTexto(x.id, x.id));
+    const ops = mezclar([real, tr, ...otros]);
+    return { id, vin: true, pregunta: '¿Qué refrán es esta viñeta?', ops, ok: ops.indexOf(real), trampa: ops.indexOf(tr), correcto: r.texto };
+  },
+  verdad(id) {
+    const r = porId(id), p = Math.random();
+    let cita, ok, expl;
+    if (p < 0.4) { cita = frankTexto(id, id); ok = 0; expl = `Existe y se dice así: «${r.texto}».`; }
+    else if (p < 0.7) {
+      const b = mezclar(R.filter(x => x.id !== id && x.mitadB !== r.mitadB))[0];
+      cita = frankTexto(id, b.id); ok = 1; expl = `Es un Frankenrefrán: mezcla «${r.texto}» con «${b.texto}».`;
+    } else { cita = conTrampa(id); ok = 1; expl = `Casi, pero no. El de verdad es «${r.texto}».`; }
+    return { id, vin: false, verdad: true, cita, pregunta: '¿Existe este refrán?', ops: ['Es de verdad', 'Lo inventó el Hornero'], ok, trampa: -1, correcto: expl };
   }
-  if (J.fase === 'final') {
-    const p = J.puntos;
-    const veredicto = p === 10 ? 'Perfecto. Te ganaste la medalla del Hornero.' : p >= 7 ? 'Muy bien, se nota que tenés calle.' : p >= 4 ? 'Zafaste. Pero hay que repasar, eh.' : 'Andá a leer las tarjetas y volvé, dale.';
-    el.innerHTML = `${selectorModo()}<div class="final"><h2 class="titulo">¡RONDA TERMINADA!</h2><div class="nota">${p}/10</div><p class="bajada">Mejor racha de la ronda: ${J.mejorRacha}</p></div>
-    <div class="hornero-dice">${avatar(p >= 7 ? 'festejando' : 'pensando')}<div class="globo-h">${veredicto}</div></div>
-    <div class="acciones"><button class="btn fuerte crece" data-a="jugar">Otra ronda</button><button class="btn crece" data-a="mazos">Cambiar mazo</button></div>`;
-    return;
+};
+
+const G = { vista: 'menu', juego: 'completar', modo: 'normal', mazo: 'todas', nombres: mem.get('nombres', ['Jugador 1', 'Jugador 2']),
+  base: [], cola: [], q: null, n: 0, total: 10, porJug: 5, pts: [0, 0], turno: 0, racha: 0, mejorRacha: 0, resp: null, fb: '', sello: '',
+  fin: 0, iv: null, ultTic: null, partida: 0, nuevo: false };
+
+function recTxt(k) {
+  if (k === 'memo') { const v = memoRecord[8] || Object.values(memoRecord)[0]; return v ? `Récord: ${v} intentos` : 'Sin récord todavía'; }
+  const a = recs[`${k}-normal`], b = recs[`${k}-reloj`];
+  return [a != null ? `${a}/10` : null, b != null ? `${b} en 60 seg` : null].filter(Boolean).join(' · ') || 'Sin récord todavía';
+}
+const nombresHTML = () => `<div class="nombres">
+  <div><label for="nom1">Jugador 1</label><input id="nom1" maxlength="14" autocomplete="off" value="${esc(G.nombres[0])}"></div>
+  <div><label for="nom2">Jugador 2</label><input id="nom2" maxlength="14" autocomplete="off" value="${esc(G.nombres[1])}"></div></div>`;
+function leerNombres() {
+  const a = $('#nom1'), b = $('#nom2'); if (!a || !b) return;
+  G.nombres = [a.value.trim() || 'Jugador 1', b.value.trim() || 'Jugador 2']; mem.set('nombres', G.nombres);
+}
+const marcadorDuelo = (pts, turno, clase = '') => `<div class="duelo-marc ${clase}">${[0, 1].map(i => `<div class="j${i}${turno === i ? ' activo' : ''}"><span>${esc(G.nombres[i])}</span><b>${pts[i]}</b></div>`).join('')}</div>`;
+
+/* ---------- pantallas ---------- */
+function vistaMenu() {
+  const n = rachaActual(), hoy = racha.ultimo === hoyStr();
+  return `<h2 class="titulo">JUEGOS</h2>
+  <div class="racha-box${hoy ? ' ok' : ''}">${svgIco('fuego', 28)}<div><b>${n ? `${n} ${n === 1 ? 'día' : 'días'} seguidos` : 'Empezá tu racha hoy'}</b>
+  <span>${hoy ? 'Hoy ya sumaste. ¡Volvé mañana!' : 'Jugá una partida o mirá el refrán del día para sumar.'}</span></div></div>
+  <div class="menu-juegos">${Object.entries(JUEGOS).map(([k, j]) => `<button class="jcard" data-juego="${k}"><img src="${j.img}" alt=""><span class="jt">${j.corto}</span><span class="jd">${j.desc}</span><span class="jr">${recTxt(k)}</span></button>`).join('')}</div>
+  <p class="bajada" style="margin-top:16px">Los tres de preguntas se pueden jugar contra reloj o de a dos, pasándose el celu.</p>`;
+}
+function vistaSetup() {
+  const j = JUEGOS[G.juego], mz = [['todas', 'Todos mezclados'], ...Object.entries(CAT)];
+  return `<button class="volver" data-a="menu">${svgIco('atras', 18)} Juegos</button>
+  <h2 class="titulo">${j.titulo}</h2><p class="bajada">${j.desc}</p>
+  <label class="lbl" id="lblModo">¿Cómo jugás?</label>
+  <div class="modos3" role="group" aria-labelledby="lblModo">${Object.entries(MODOS).map(([k, [t, d, ic]]) => `<button class="mazo" data-md="${k}" aria-pressed="${G.modo === k}">${svgIco(ic, 22)}<span>${t}</span><small>${d}</small></button>`).join('')}</div>
+  ${G.modo === 'duelo' ? nombresHTML() : ''}
+  <label class="lbl" id="lblMazo">Elegí el mazo</label>
+  <div class="mazos" role="group" aria-labelledby="lblMazo">${mz.map(([k, t]) => `<button class="mazo" data-mz="${k}" aria-pressed="${G.mazo === k}">${t}</button>`).join('')}</div>
+  <button class="btn fuerte grande" data-a="jugar">¡A JUGAR!</button>`;
+}
+function marcadorHTML() {
+  if (G.modo === 'reloj') {
+    const resta = Math.max(0, G.fin - Date.now());
+    return `<div class="reloj"><div class="reloj-num"><b id="relojSeg">${Math.ceil(resta / 1000)}</b><span>seg</span></div>
+    <div class="reloj-barra" aria-hidden="true"><i id="relojBar" style="width:${resta / 600}%"></i></div>
+    <div class="reloj-num"><b>${G.pts[0]}</b><span>puntos</span></div></div>`;
   }
-  const id = J.preg[J.i], r = porId(id);
-  const respondida = J.resp !== null;
-  el.innerHTML = `${selectorModo()}<div class="marcador"><div><b>${J.i + 1}/${J.preg.length}</b><span>Pregunta</span></div><div><b>${J.puntos}</b><span>Puntos</span></div><div><b>${J.racha}</b><span>Racha</span></div></div>
-  <div class="franken">${vin(id, true)}</div>
-  <p class="pregunta">${esc(r.mitadA)}…</p>
-  <div class="opciones">${J.ops.map((o, k) => {
+  if (G.modo === 'duelo') return `${marcadorDuelo(G.pts, G.turno)}<p class="bajada turno">Turno de <b>${esc(G.nombres[G.turno])}</b> · pregunta ${G.n % G.porJug + 1} de ${G.porJug}</p>`;
+  return `<div class="marcador"><div><b>${G.n + 1}/${G.total}</b><span>Pregunta</span></div><div><b>${G.pts[0]}</b><span>Puntos</span></div><div><b>${G.racha}</b><span>Racha</span></div></div>`;
+}
+function vistaJugando() {
+  const q = G.q, resp = G.resp !== null, ok = resp && G.resp === q.ok;
+  const arriba = q.vin ? `<div class="franken">${vin(q.id, true)}</div>`
+    : `<div class="cita-h">${avatar('pensando')}<blockquote class="cita">«${esc(q.cita)}»</blockquote></div>`;
+  const ops = q.ops.map((o, k) => {
     let cl = '';
-    if (respondida) { if (o === r.mitadB) cl = 'bien'; else if (k === J.resp) cl = 'mal'; }
-    return `<button class="opcion ${cl}" data-op="${k}" ${respondida ? 'disabled' : ''}>${esc(o)}</button>`;
-  }).join('')}</div>
-  ${respondida ? (() => {
-    const elegida = J.ops[J.resp], ok = elegida === r.mitadB, cayo = !ok && elegida === TRAMPAS[id];
-    const texto = ok ? BIEN[azar(BIEN.length)] : cayo ? `${TRAMPA_MAL[azar(TRAMPA_MAL.length)]} Es «${r.texto}».` : MAL[azar(MAL.length)];
-    return `<div class="hornero-dice">${avatar(ok ? 'festejando' : 'pensando')}<div class="globo-h"><span class="sello ${ok ? 'bien' : 'mal'}">${ok ? '¡BIEN AHÍ!' : cayo ? '¡TRAMPITA!' : '¡NAAA!'}</span><br>${esc(texto)}</div></div>`;
-  })() + `
-  <button class="btn fuerte grande" data-a="sig" style="margin-top:14px">${J.i + 1 < J.preg.length ? 'SIGUIENTE' : 'VER RESULTADO'}</button>` : ''}`;
+    if (resp) { if (k === q.ok) cl = 'bien'; else if (k === G.resp) cl = 'mal'; }
+    return `<button class="opcion ${cl}" data-op="${k}" ${resp ? 'disabled' : ''}>${esc(o)}</button>`;
+  }).join('');
+  let fb = '';
+  if (resp && G.modo === 'reloj') fb = `<p class="fb-rapido"><span class="sello ${ok ? 'bien' : 'mal'}">${ok ? '¡BIEN!' : '¡NAAA! −3 SEG'}</span></p>`;
+  else if (resp) fb = `<div class="hornero-dice">${avatar(ok ? 'festejando' : 'pensando')}<div class="globo-h"><span class="sello ${ok ? 'bien' : 'mal'}">${G.sello}</span><br>${esc(G.fb)}</div></div>
+    <button class="btn fuerte grande" data-a="sig" style="margin-top:14px">${G.n + 1 < G.total ? 'SIGUIENTE' : 'VER RESULTADO'}</button>`;
+  return `${marcadorHTML()}${arriba}<p class="pregunta">${esc(q.pregunta)}</p><div class="opciones${q.verdad ? ' dos' : ''}">${ops}</div>${fb}
+  <div class="acciones"><button class="btn crece" data-a="menu">Abandonar</button></div>`;
+}
+function vistaPase() {
+  const i = G.turno;
+  return `<div class="pase"><p class="bajada">${i === 0 ? 'Arranca' : 'Ahora le toca a'}</p>
+  <div class="pase-nombre j${i}">${esc(G.nombres[i])}</div>
+  <p>${i === 1 ? `${esc(G.nombres[0])} hizo <b>${G.pts[0]}</b> de ${G.porJug}. ¡A superarlo!` : `${G.porJug} preguntas cada uno. Gana el que más acierta.`}</p>
+  ${i === 1 ? '<p class="bajada">Pasale el celu y que no espíe.</p>' : ''}
+  <button class="btn fuerte grande" data-a="listo">¡LISTO, A JUGAR!</button></div>`;
+}
+function vistaFinal() {
+  let cuerpo, pose, dice;
+  if (G.modo === 'duelo') {
+    const [a, b] = G.pts, emp = a === b, gan = a > b ? 0 : 1;
+    cuerpo = `<h2 class="titulo">${emp ? '¡EMPATE!' : `¡GANÓ ${esc(G.nombres[gan].toUpperCase())}!`}</h2>${marcadorDuelo(G.pts, emp ? -1 : gan, 'final')}`;
+    pose = 'festejando';
+    dice = emp ? 'Empate técnico. Van a tener que jugar la revancha.' : `¡Bien, ${G.nombres[gan]}! ${G.nombres[1 - gan]}, andá practicando que la revancha está cerca.`;
+  } else if (G.modo === 'reloj') {
+    const p = G.pts[0];
+    cuerpo = `<h2 class="titulo">¡SE TERMINÓ EL TIEMPO!</h2><div class="nota">${p}</div><p class="bajada">respuestas correctas en 60 segundos</p>`;
+    pose = p >= 10 ? 'festejando' : 'pensando';
+    dice = p >= 15 ? 'Una máquina. Ni yo respondo tan rápido.' : p >= 8 ? 'Nada mal, eh. Con un poco más de práctica llegás a 15.' : 'Acá hay que apurarse, maestro. ¡Otra!';
+  } else {
+    const nota = Math.round(G.pts[0] * 10 / G.total);
+    cuerpo = `<h2 class="titulo">¡RONDA TERMINADA!</h2><div class="nota">${nota}/10</div><p class="bajada">Mejor racha de la ronda: ${G.mejorRacha}</p>`;
+    pose = nota >= 7 ? 'festejando' : 'pensando';
+    dice = nota === 10 ? 'Perfecto. Te ganaste la medalla del Hornero.' : nota >= 7 ? 'Muy bien, se nota que tenés calle.' : nota >= 4 ? 'Zafaste. Pero hay que repasar, eh.' : 'Andá a leer las tarjetas y volvé, dale.';
+  }
+  const nuevo = G.nuevo ? `<p class="centro"><span class="sello bien">¡NUEVO RÉCORD!</span></p>` : '';
+  return `<div class="final">${cuerpo}</div>${nuevo}
+  <div class="hornero-dice">${avatar(pose)}<div class="globo-h">${esc(dice)}</div></div>
+  <div class="acciones"><button class="btn fuerte crece" data-a="jugar">${G.modo === 'duelo' ? 'Revancha' : 'Otra vez'}</button>
+  <button class="btn crece" data-a="setup">Cambiar modo</button><button class="btn crece" data-a="menu">Otro juego</button></div>`;
+}
+function pintarJuego() {
+  if (G.vista === 'memo') return pintarMemo();
+  const v = { menu: vistaMenu, setup: vistaSetup, pase: vistaPase, final: vistaFinal, jugando: vistaJugando }[G.vista];
+  $('#p-juego').innerHTML = v();
+}
+
+/* ---------- lógica de partida ---------- */
+function pararReloj() { clearInterval(G.iv); G.iv = null; }
+function tick() {
+  const resta = Math.max(0, G.fin - Date.now()), s = Math.ceil(resta / 1000);
+  const b = $('#relojBar'), t = $('#relojSeg');
+  if (b) b.style.width = (resta / 600) + '%';
+  if (t) { t.textContent = s; t.parentElement.classList.toggle('apuro', s <= 10); }
+  if (resta > 0 && s <= 5 && s !== G.ultTic) { G.ultTic = s; SND.play('tic'); }
+  if (resta <= 0) terminar();
+}
+function siguientePreg() {
+  if (!G.cola.length) G.cola = mezclar(G.base);
+  G.q = PREG[G.juego](G.cola.pop()); G.resp = null; G.fb = ''; G.sello = '';
+}
+function empezar() {
+  pararReloj(); G.partida++;
+  const base = G.mazo === 'todas' ? R : R.filter(r => r.categoria === G.mazo);
+  G.base = base.map(r => r.id); G.cola = mezclar(G.base);
+  Object.assign(G, { n: 0, pts: [0, 0], turno: 0, racha: 0, mejorRacha: 0, nuevo: false, ultTic: null });
+  G.total = G.modo === 'reloj' ? Infinity : Math.min(10, G.base.length);
+  if (G.modo === 'duelo') { G.porJug = Math.floor(G.total / 2); G.total = G.porJug * 2; G.vista = 'pase'; pintarJuego(); scrollTo({ top: 0 }); return; }
+  siguientePreg(); G.vista = 'jugando';
+  if (G.modo === 'reloj') { G.fin = Date.now() + 60000; G.iv = setInterval(tick, 200); }
+  pintarJuego(); scrollTo({ top: 0 });
+}
+function responder(k) {
+  if (G.resp !== null || G.vista !== 'jugando') return;
+  const q = G.q, ok = k === q.ok, cayo = !ok && k === q.trampa;
+  G.resp = k;
+  if (ok) { G.pts[G.turno]++; G.racha++; G.mejorRacha = Math.max(G.mejorRacha, G.racha); } else G.racha = 0;
+  const base = ok ? BIEN[azar(BIEN.length)] : cayo ? TRAMPA_MAL[azar(TRAMPA_MAL.length)] : MAL[azar(MAL.length)];
+  G.fb = q.verdad ? `${base} ${q.correcto}` : ok ? base : `${base} Es «${q.correcto}».`;
+  G.sello = ok ? '¡BIEN AHÍ!' : cayo ? '¡TRAMPITA!' : '¡NAAA!';
+  if (navigator.vibrate) navigator.vibrate(ok ? 25 : [40, 60, 40]);
+  if (G.modo === 'reloj') {
+    SND.play(ok ? 'pop' : 'error');
+    if (!ok) G.fin -= 3000;
+    pintarJuego();
+    const p = G.partida;
+    setTimeout(() => { if (G.partida !== p || G.vista !== 'jugando') return; G.n++; siguientePreg(); pintarJuego(); }, ok ? 550 : 900);
+    return;
+  }
+  SND.play(ok ? 'tada' : 'wahwah');
+  pintarJuego();
+}
+function avanzar() {
+  G.n++;
+  if (G.n >= G.total) return terminar();
+  SND.play('slide');
+  if (G.modo === 'duelo' && G.n === G.porJug) { G.turno = 1; G.vista = 'pase'; pintarJuego(); scrollTo({ top: 0 }); return; }
+  siguientePreg(); pintarJuego(); scrollTo({ top: 0 });
+}
+function terminar() {
+  pararReloj();
+  if (G.vista === 'final') return;
+  G.vista = 'final';
+  if (G.modo !== 'duelo') {
+    const clave = `${G.juego}-${G.modo}`, val = G.modo === 'normal' ? Math.round(G.pts[0] * 10 / G.total) : G.pts[0];
+    G.nuevo = val > 0 && val > (recs[clave] || 0);
+    if (G.nuevo) { recs[clave] = val; mem.set('recs', recs); }
+  }
+  SND.play(G.modo === 'reloj' ? 'silbato' : 'estampa');
+  marcarDia();
+  pintarJuego(); scrollTo({ top: 0 });
 }
 $('#p-juego').addEventListener('click', e => {
-  const md = e.target.closest('[data-modo]');
-  if (md) { if (J.modo !== md.dataset.modo) { SND.play('slide'); J.modo = md.dataset.modo; J.fase = 'inicio'; M.fase = 'inicio'; pintarJuego(); } return; }
-  if (J.modo === 'memo') return clickMemo(e);
-  const m = e.target.closest('[data-mz]'); if (m) { SND.play('tap'); J.mazo = m.dataset.mz; pintarJuego(); return; }
-  const o = e.target.closest('[data-op]');
-  if (o && J.resp === null) {
-    J.resp = +o.dataset.op;
-    const ok = J.ops[J.resp] === porId(J.preg[J.i]).mitadB;
-    if (ok) { J.puntos++; J.racha++; J.mejorRacha = Math.max(J.mejorRacha, J.racha); } else J.racha = 0;
-    SND.play(ok ? 'tada' : 'wahwah');
-    if (navigator.vibrate) navigator.vibrate(ok ? 25 : [40, 60, 40]);
-    pintarJuego(); return;
-  }
-  const b = e.target.closest('[data-a]'); if (!b) return;
-  if (b.dataset.a === 'jugar') {
+  if (G.vista === 'memo') return clickMemo(e);
+  const jc = e.target.closest('[data-juego]');
+  if (jc) {
     SND.play('boing');
-    const base = J.mazo === 'todas' ? R : R.filter(r => r.categoria === J.mazo);
-    Object.assign(J, { fase: 'juego', preg: mezclar(base.map(r => r.id)).slice(0, 10), i: 0, puntos: 0, racha: 0, mejorRacha: 0, resp: null });
-    J.ops = armarOpciones(J.preg[0]); pintarJuego(); scrollTo({ top: 0 });
+    const k = jc.dataset.juego;
+    if (k === 'memo') { G.vista = 'memo'; M.fase = 'inicio'; } else { G.juego = k; G.vista = 'setup'; }
+    pintarJuego(); scrollTo({ top: 0 }); return;
   }
-  if (b.dataset.a === 'sig') {
-    if (J.i + 1 < J.preg.length) { J.i++; J.resp = null; J.ops = armarOpciones(J.preg[J.i]); }
-    else {
-      J.fase = 'final';
-      SND.play('estampa');
-      const total = J.preg.length, nota = Math.round(J.puntos * 10 / total);
-      J.puntos = nota;
-      record = { puntos: Math.max(record.puntos, nota), racha: Math.max(record.racha, J.mejorRacha) }; mem.set('record', record);
-    }
-    if (J.fase !== 'final') SND.play('slide');
-    pintarJuego(); scrollTo({ top: 0 });
+  const md = e.target.closest('[data-md]'); if (md) { leerNombres(); SND.play('tap'); G.modo = md.dataset.md; pintarJuego(); return; }
+  const mz = e.target.closest('[data-mz]'); if (mz) { leerNombres(); SND.play('tap'); G.mazo = mz.dataset.mz; pintarJuego(); return; }
+  const o = e.target.closest('[data-op]'); if (o) return responder(+o.dataset.op);
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  switch (b.dataset.a) {
+    case 'menu': pararReloj(); G.partida++; SND.play('slide'); G.vista = 'menu'; pintarJuego(); scrollTo({ top: 0 }); break;
+    case 'setup': SND.play('slide'); G.vista = 'setup'; pintarJuego(); scrollTo({ top: 0 }); break;
+    case 'jugar': leerNombres(); SND.play('boing'); empezar(); break;
+    case 'listo': SND.play('boing'); G.vista = 'jugando'; siguientePreg(); pintarJuego(); scrollTo({ top: 0 }); break;
+    case 'sig': avanzar(); break;
   }
-  if (b.dataset.a === 'mazos') { J.fase = 'inicio'; pintarJuego(); }
 });
 
 /* =========================================================
-   3b. MEMOTEST
+   3b. MEMOTEST (solo o de a dos)
    ========================================================= */
 const MEMO_OK = ['¡Esa es!', '¡Pareja encontrada!', '¡Bien ahí, memoria de elefante!', '¡Justo esa!'];
 const MEMO_MAL = ['Nah, no eran iguales.', 'Casi. Acordate dónde estaba cada una.', 'Esa no. Mirá bien antes de tocar.', 'Uh, se te mezclaron.'];
-const M = { fase: 'inicio', pares: 8, cartas: [], abiertas: [], encontradas: 0, intentos: 0, trabado: false };
+const M = { fase: 'inicio', pares: 8, jug: 1, turno: 0, pts: [0, 0], cartas: [], abiertas: [], encontradas: 0, intentos: 0, trabado: false };
 let memoRecord = mem.get('memo', {});
 const DIFICULTAD = [[6, 'Fácil', '6 pares'], [8, 'Normal', '8 pares'], [10, 'Difícil', '10 pares']];
 const caraMemo = id => {
   const attrs = 'preserveAspectRatio="xMidYMid slice" aria-hidden="true"';
   return FOTOS.has(id) ? fotoSVG(id, attrs) : vineta(ESCENAS[id], { uid: 'm', attrs });
 };
+const marcMemo = () => M.jug === 2 ? marcadorDuelo(M.pts, M.turno)
+  : `<div class="marcador"><div><b>${M.intentos}</b><span>Intentos</span></div><div><b>${M.encontradas}/${M.pares}</b><span>Pares</span></div></div>`;
 function pintarMemo() {
   const el = $('#p-juego');
   if (M.fase === 'inicio') {
     const rec = memoRecord[M.pares];
-    el.innerHTML = `${selectorModo()}<h2 class="titulo">MEMOTEST</h2><p class="bajada">Dá vuelta las cartas de a dos y encontrá las viñetas iguales. Cada pareja que armás te dice su refrán.</p>
-    <div class="marcador"><div><b>${rec ? rec : '—'}</b><span>Tu récord en ${M.pares} pares (menos intentos es mejor)</span></div></div>
+    el.innerHTML = `<button class="volver" data-a="menu">${svgIco('atras', 18)} Juegos</button>
+    <h2 class="titulo">MEMOTEST</h2><p class="bajada">Dá vuelta las cartas de a dos y encontrá las viñetas iguales. Cada pareja que armás te dice su refrán.</p>
+    <label class="lbl" id="lblJug">¿Cuántos juegan?</label>
+    <div class="mazos" role="group" aria-labelledby="lblJug">
+      <button class="mazo" data-mjug="1" aria-pressed="${M.jug === 1}">Solo<br><small>contra tu récord</small></button>
+      <button class="mazo" data-mjug="2" aria-pressed="${M.jug === 2}">De a dos<br><small>si acertás, seguís jugando</small></button></div>
+    ${M.jug === 2 ? nombresHTML() : `<div class="marcador"><div><b>${rec || '—'}</b><span>Tu récord en ${M.pares} pares (menos intentos es mejor)</span></div></div>`}
     <label class="lbl" id="lblDif">Elegí la dificultad</label>
     <div class="mazos" role="group" aria-labelledby="lblDif">${DIFICULTAD.map(([n, t, d]) => `<button class="mazo" data-pares="${n}" aria-pressed="${M.pares === n}">${t}<br><small>${d}</small></button>`).join('')}</div>
     <button class="btn fuerte grande" data-a="memo-jugar">¡A JUGAR!</button>`;
     return;
   }
   if (M.fase === 'final') {
+    const botones = `<div class="acciones"><button class="btn fuerte crece" data-a="memo-jugar">${M.jug === 2 ? 'Revancha' : 'Otra partida'}</button><button class="btn crece" data-a="memo-inicio">Cambiar dificultad</button><button class="btn crece" data-a="menu">Otro juego</button></div>`;
+    if (M.jug === 2) {
+      const [a, b] = M.pts, emp = a === b, gan = a > b ? 0 : 1;
+      el.innerHTML = `<div class="final"><h2 class="titulo">${emp ? '¡EMPATE!' : `¡GANÓ ${esc(G.nombres[gan].toUpperCase())}!`}</h2>${marcadorDuelo(M.pts, emp ? -1 : gan, 'final')}<p class="bajada">parejas encontradas</p></div>
+      <div class="hornero-dice">${avatar('festejando')}<div class="globo-h">${emp ? 'Empate. Los dos tienen memoria de elefante.' : `${esc(G.nombres[gan])} se acordaba de todo. ¡Revancha!`}</div></div>${botones}`;
+      return;
+    }
     const n = M.intentos, minimo = M.pares;
     const veredicto = n <= minimo + 2 ? '¡Qué memoria, maestro! Ni el elefante.' : n <= minimo * 2 ? 'Muy bien. Se nota que prestás atención.' : 'Lo sacaste, que es lo que importa. Dale otra.';
-    const nuevo = M.nuevoRecord ? `<p class="bajada" style="text-align:center"><span class="sello bien">¡NUEVO RÉCORD!</span></p>` : '';
-    el.innerHTML = `${selectorModo()}<div class="final"><h2 class="titulo">¡COMPLETASTE EL MEMOTEST!</h2><div class="nota">${n}</div><p class="bajada">intentos para ${M.pares} pares</p></div>${nuevo}
-    <div class="hornero-dice">${avatar(n <= minimo * 2 ? 'festejando' : 'pensando')}<div class="globo-h">${veredicto}</div></div>
-    <div class="acciones"><button class="btn fuerte crece" data-a="memo-jugar">Otra partida</button><button class="btn crece" data-a="memo-inicio">Cambiar dificultad</button></div>`;
+    const nuevo = M.nuevoRecord ? `<p class="centro"><span class="sello bien">¡NUEVO RÉCORD!</span></p>` : '';
+    el.innerHTML = `<div class="final"><h2 class="titulo">¡COMPLETASTE EL MEMOTEST!</h2><div class="nota">${n}</div><p class="bajada">intentos para ${M.pares} pares</p></div>${nuevo}
+    <div class="hornero-dice">${avatar(n <= minimo * 2 ? 'festejando' : 'pensando')}<div class="globo-h">${veredicto}</div></div>${botones}`;
     return;
   }
   const cols = M.pares === 6 ? 3 : 4;
-  el.innerHTML = `${selectorModo()}<div class="marcador"><div><b id="memoInt">${M.intentos}</b><span>Intentos</span></div><div><b id="memoPar">${M.encontradas}/${M.pares}</b><span>Pares</span></div></div>
-  <div class="hornero-dice" style="margin-top:0">${avatar('pensando')}<div class="globo-h" id="memoQuip" aria-live="polite">Dale, dá vuelta dos cartas.</div></div>
+  el.innerHTML = `<div id="memoMarc">${marcMemo()}</div>
+  <div class="hornero-dice" style="margin-top:0">${avatar('pensando')}<div class="globo-h" id="memoQuip" aria-live="polite">${M.jug === 2 ? `Arranca <b>${esc(G.nombres[0])}</b>. Dá vuelta dos cartas.` : 'Dale, dá vuelta dos cartas.'}</div></div>
   <div class="memo" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${M.cartas.map((c, k) => `<button class="memo-carta" data-mc="${k}" aria-label="Carta ${k + 1}, boca abajo"><span class="memo-in"><span class="memo-dorso" aria-hidden="true">?</span><span class="memo-cara">${caraMemo(c.id)}</span></span></button>`).join('')}</div>
   <div class="acciones"><button class="btn crece" data-a="memo-inicio">Abandonar</button></div>`;
 }
 function empezarMemo() {
   const ids = mezclar(R.map(r => r.id)).slice(0, M.pares);
-  Object.assign(M, { fase: 'juego', cartas: mezclar([...ids, ...ids].map(id => ({ id, ok: false }))), abiertas: [], encontradas: 0, intentos: 0, trabado: false, nuevoRecord: false });
+  Object.assign(M, { fase: 'juego', cartas: mezclar([...ids, ...ids].map(id => ({ id, ok: false }))), abiertas: [], encontradas: 0, intentos: 0, trabado: false, nuevoRecord: false, turno: 0, pts: [0, 0] });
   pintarMemo(); scrollTo({ top: 0 });
 }
 function darVuelta(k) {
@@ -359,14 +542,17 @@ function darVuelta(k) {
   SND.play('swish');
   M.abiertas.push(k);
   if (M.abiertas.length < 2) return;
-  M.intentos++; $('#memoInt').textContent = M.intentos;
+  M.intentos++; $('#memoMarc').innerHTML = marcMemo();
   const [a, b] = M.abiertas, iguales = M.cartas[a].id === M.cartas[b].id;
   M.trabado = true;
   if (iguales) {
     setTimeout(() => {
       [a, b].forEach(i => { M.cartas[i].ok = true; document.querySelector(`[data-mc="${i}"]`).classList.add('ok'); });
-      M.encontradas++; $('#memoPar').textContent = `${M.encontradas}/${M.pares}`;
-      $('#memoQuip').innerHTML = `<b>${MEMO_OK[azar(MEMO_OK.length)]}</b> «${esc(porId(M.cartas[a].id).texto)}»`;
+      M.encontradas++;
+      if (M.jug === 2) M.pts[M.turno]++;
+      $('#memoMarc').innerHTML = marcMemo();
+      const quien = M.jug === 2 ? `<b>¡Punto para ${esc(G.nombres[M.turno])}!</b> Sigue jugando. ` : `<b>${MEMO_OK[azar(MEMO_OK.length)]}</b> `;
+      $('#memoQuip').innerHTML = `${quien}«${esc(porId(M.cartas[a].id).texto)}»`;
       SND.play('tada'); if (navigator.vibrate) navigator.vibrate(25);
       M.abiertas = []; M.trabado = false;
       if (M.encontradas === M.pares) setTimeout(terminarMemo, 1400);
@@ -376,21 +562,30 @@ function darVuelta(k) {
     setTimeout(() => {
       [a, b].forEach(i => { const el = document.querySelector(`[data-mc="${i}"]`); el.classList.remove('up'); el.setAttribute('aria-label', `Carta ${i + 1}, boca abajo`); });
       SND.play('swish'); M.abiertas = []; M.trabado = false;
+      if (M.jug === 2) {
+        M.turno = 1 - M.turno;
+        $('#memoMarc').innerHTML = marcMemo();
+        $('#memoQuip').innerHTML = `Turno de <b>${esc(G.nombres[M.turno])}</b>.`;
+      }
     }, 1000);
   }
 }
 function terminarMemo() {
-  const previo = memoRecord[M.pares];
-  M.nuevoRecord = !previo || M.intentos < previo;
-  if (M.nuevoRecord) { memoRecord[M.pares] = M.intentos; mem.set('memo', memoRecord); }
-  M.fase = 'final'; SND.play('estampa'); pintarMemo(); scrollTo({ top: 0 });
+  if (M.jug === 1) {
+    const previo = memoRecord[M.pares];
+    M.nuevoRecord = !previo || M.intentos < previo;
+    if (M.nuevoRecord) { memoRecord[M.pares] = M.intentos; mem.set('memo', memoRecord); }
+  }
+  M.fase = 'final'; SND.play('estampa'); marcarDia(); pintarMemo(); scrollTo({ top: 0 });
 }
 function clickMemo(e) {
   const c = e.target.closest('[data-mc]'); if (c) return darVuelta(+c.dataset.mc);
-  const p = e.target.closest('[data-pares]'); if (p) { SND.play('tap'); M.pares = +p.dataset.pares; pintarMemo(); return; }
+  const j = e.target.closest('[data-mjug]'); if (j) { leerNombres(); SND.play('tap'); M.jug = +j.dataset.mjug; pintarMemo(); return; }
+  const p = e.target.closest('[data-pares]'); if (p) { leerNombres(); SND.play('tap'); M.pares = +p.dataset.pares; pintarMemo(); return; }
   const b = e.target.closest('[data-a]'); if (!b) return;
-  if (b.dataset.a === 'memo-jugar') { SND.play('boing'); empezarMemo(); }
+  if (b.dataset.a === 'memo-jugar') { leerNombres(); SND.play('boing'); empezarMemo(); }
   if (b.dataset.a === 'memo-inicio') { SND.play('slide'); M.fase = 'inicio'; pintarMemo(); }
+  if (b.dataset.a === 'menu') { SND.play('slide'); G.vista = 'menu'; pintarJuego(); scrollTo({ top: 0 }); }
 }
 
 /* =========================================================
